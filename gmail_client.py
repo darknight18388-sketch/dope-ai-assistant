@@ -48,7 +48,12 @@ def unread(max_results=10, skip_automated=True):
         _, d = m.fetch(i, "(BODY.PEEK[])")
         msg = email.message_from_bytes(d[0][1])
         sender = _dec(msg["From"])
-        if skip_automated and _automated(sender):
+        if skip_automated and (
+            _automated(sender)
+            or msg["List-Unsubscribe"]
+            or (msg["Precedence"] or "").lower() in ("bulk", "list", "junk")
+            or (msg.get("Auto-Submitted") or "no").lower() != "no"
+        ):
             continue
         out.append({
             "from": sender,
